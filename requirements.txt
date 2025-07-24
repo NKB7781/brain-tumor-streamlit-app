@@ -1,6 +1,8 @@
-streamlit
-tensorflow
-keras
+streamlit==1.35.0
+tensorflow==2.12.0
+keras==2.12.0
 numpy
-opencv-python
-Pillow
+pillow
+matplotlib
+seaborn
+gdown
