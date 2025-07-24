@@ -1,24 +1,31 @@
 import streamlit as st
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image
-import numpy as np
 from PIL import Image
+import numpy as np
 import os
 import gdown
 
-model_path = "best_resnet_model.h5"
-if not os.path.exists(model_path):
-    url = "https://drive.google.com/file/d/1EoL148o3_WQYt-eL2DxC7kopbZA6ZGGD/view?usp=drive_link"
-    gdown.download(url, model_path, quiet=False)
-
-# ⬇️ Load Models
 @st.cache_resource
-def load_models():
-    cnn_model = load_model("custom_cnn_model.h5")
-    resnet_model = load_model("best_resnet_model.h5")
+def download_and_load_models():
+    # CNN Model (stored locally)
+    cnn_path = "models/custom_cnn_model.h5"
+    cnn_model = load_model(cnn_path)
+
+    # ResNet Model (load from Google Drive)
+    resnet_path = "models/best_resnet_model.h5"
+    if not os.path.exists(resnet_path):
+        gdown.download(
+            url="https://drive.google.com/uc?id=1EoL148o3_WQYt-eL2DxC7kopbZA6ZGGD",
+            output=resnet_path,
+            quiet=False
+        )
+    resnet_model = load_model(resnet_path)
+
     return cnn_model, resnet_model
 
-cnn_model, resnet_model = load_models()
+cnn_model, resnet_model = download_and_load_models()
+
 
 # Class labels (based on your dataset)
 class_names = ['glioma', 'meningioma', 'no_tumor', 'pituitary']
