@@ -1,50 +1,58 @@
 import streamlit as st
-import numpy as np
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image
+import numpy as np
 from PIL import Image
 import os
 import gdown
 
-file_id = "1EoL148o3_WQYt-eL2DxC7kopbZA6ZGGD"
-url = f"https://drive.google.com/uc?id={file_id}"
-gdown.download(url, "best_resnet_model.h5", quiet=False)
+model_path = "best_resnet_model.h5"
+if not os.path.exists(model_path):
+    url = "https://drive.google.com/uc?id=YOUR_FILE_ID"
+    gdown.download(url, model_path, quiet=False)
 
-#Load Models
-@st.cache_resource(allow_output_mutation=True)
+# ⬇️ Load Models
+@st.cache_resource
 def load_models():
-    custom_model = load_model("custom_cnn_model.h5")
+    cnn_model = load_model("custom_cnn_model.h5")
     resnet_model = load_model("best_resnet_model.h5")
-    return custom_model, resnet_model
+    return cnn_model, resnet_model
 
-custom_model, resnet_model = load_models()
- 
-#Define Prediction Function
-def predict_tumor(img, model):
+cnn_model, resnet_model = load_models()
+
+# Class labels (based on your dataset)
+class_names = ['glioma', 'meningioma', 'no_tumor', 'pituitary']
+
+# ⬆️ Image Preprocessing
+def preprocess_image(img):
     img = img.resize((224, 224))
-    img_array = image.img_to_array(img)
-    img_array = img_array / 255.0  # normalize
-    img_array = np.expand_dims(img_array, axis=0)
-    prediction = model.predict(img_array)
-    class_index = np.argmax(prediction)
-    class_labels = ['glioma', 'meningioma', 'no_tumor', 'pituitary']
-    return class_labels[class_index], prediction[0][class_index]
+    img_array = image.img_to_array(img) / 255.0
+    return np.expand_dims(img_array, axis=0)
 
-#Streamlit UI
-st.set_page_config(page_title="Brain Tumor Classifier", layout="centered")
-st.title("🧠 Brain Tumor MRI Classifier")
+# 🎯 Prediction Function
+def predict(img, model):
+    processed = preprocess_image(img)
+    prediction = model.predict(processed)
+    predicted_class = class_names[np.argmax(prediction)]
+    confidence = np.max(prediction) * 100
+    return predicted_class, confidence
 
-uploaded_file = st.file_uploader("Upload an MRI Image", type=["jpg", "jpeg", "png"])
-model_choice = st.radio("Select Model to Use", ("Custom CNN", "ResNet50 Fine-Tuned"))
+# 📱 UI Layout
+st.title("🧠 Brain Tumor Classification")
+st.markdown("Upload an MRI image and select a model to classify the tumor.")
+
+# 📤 Upload Image
+uploaded_file = st.file_uploader("Upload MRI Image", type=['jpg', 'jpeg', 'png'])
+
+# 🧠 Select Model
+model_choice = st.selectbox("Choose a Model", ["Custom CNN", "ResNet50 Fine-tuned"])
 
 if uploaded_file is not None:
-    img = Image.open(uploaded_file)
-    st.image(img, caption="Uploaded Image", use_column_width=True)
+    image_pil = Image.open(uploaded_file).convert('RGB')
+    st.image(image_pil, caption="Uploaded Image", use_column_width=True)
 
     if st.button("Predict"):
-        if model_choice == "Custom CNN":
-            label, confidence = predict_tumor(img, custom_model)
-        else:
-            label, confidence = predict_tumor(img, resnet_model)
+        model = cnn_model if model_choice == "Custom CNN" else resnet_model
+        label, confidence = predict(image_pil, model)
+        st.success(f"Prediction: **{label.upper()}** with **{confidence:.2f}%** confidence")
 
-        st.success(f"Prediction: **{label.upper()}** with confidence {confidence:.2f}")
