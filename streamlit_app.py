@@ -8,7 +8,7 @@ import gdown
 
 model_path = "best_resnet_model.h5"
 if not os.path.exists(model_path):
-    url = "https://drive.google.com/uc?id=YOUR_FILE_ID"
+    url = "https://drive.google.com/file/d/1EoL148o3_WQYt-eL2DxC7kopbZA6ZGGD/view?usp=drive_link"
     gdown.download(url, model_path, quiet=False)
 
 # ⬇️ Load Models
