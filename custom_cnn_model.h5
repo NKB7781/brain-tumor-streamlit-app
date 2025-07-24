@@ -1,0 +1,48 @@
+import streamlit as st
+import numpy as np
+from tensorflow.keras.models import load_model
+from tensorflow.keras.preprocessing import image
+from PIL import Image
+import os
+
+st.set_page_config(page_title="Brain Tumor Detection", layout="centered")
+
+@st.cache_resource
+def load_cnn_model():
+    model_path = "custom_cnn_model.h5"
+    
+    if not os.path.exists(model_path):
+        st.error(f"❌ Model file not found at: {model_path}")
+        return None
+    
+    try:
+        model = load_model(model_path, compile=False)
+        return model
+    except Exception as e:
+        st.error(f"⚠️ Failed to load model: {str(e)}")
+        return None
+
+model = load_cnn_model()
+
+st.title("🧠 Brain Tumor Classification - Custom CNN")
+st.write("Upload a brain MRI image and the model will predict the tumor type.")
+
+uploaded_file = st.file_uploader("📤 Upload an MRI Image", type=["jpg", "jpeg", "png"])
+
+if uploaded_file is not None:
+    img = Image.open(uploaded_file).convert('RGB')
+    st.image(img, caption='Uploaded Image', use_column_width=True)
+
+    if model:
+        img = img.resize((224, 224))
+        img_array = image.img_to_array(img)
+        img_array = img_array / 255.0  # same as model training
+        img_array = np.expand_dims(img_array, axis=0)
+
+        prediction = model.predict(img_array)[0]
+        classes = ['glioma', 'meningioma', 'no_tumor', 'pituitary']
+        predicted_class = classes[np.argmax(prediction)]
+        confidence = np.max(prediction) * 100
+
+        st.success(f"🎯 **Predicted Tumor Type:** `{predicted_class}`")
+        st.info(f"🧪 Confidence: `{confidence:.2f}%`")
