@@ -6,9 +6,9 @@ from PIL import Image
 import os
 import gdown
 
-url = 'https://drive.google.com/uc?id=FILE_ID'
-output = 'best_resnet_model.h5'
-gdown.download(url, output, quiet=False)
+file_id = "1EoL148o3_WQYt-eL2DxC7kopbZA6ZGGD"
+url = f"https://drive.google.com/uc?id={file_id}"
+gdown.download(url, "best_resnet_model.h5", quiet=False)
 
 #Load Models
 @st.cache_resource(allow_output_mutation=True)
