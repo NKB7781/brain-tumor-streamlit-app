@@ -21,6 +21,9 @@ def download_and_load_models():
             quiet=False
         )
     resnet_model = load_model(resnet_path)
+    cnn_model.save("custom_cnn_model.h5")
+    transfer_model.save("best_resnet_model.h5")
+
 
     return cnn_model, resnet_model
 
